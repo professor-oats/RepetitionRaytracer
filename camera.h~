@@ -30,8 +30,8 @@ class camera {
       lower_left_corner = origin - horizontal/2 - vertical/2 - w;
     }
     
-    ray get_ray(double s, double t) const {
-      return ray(origin, lower_left_corner + s*horizontal + t*vertical - origin);
+    ray get_ray(double u, double v) const {
+      return ray(origin, lower_left_corner + u*horizontal + v*vertical - origin);
     }
 
   private:
