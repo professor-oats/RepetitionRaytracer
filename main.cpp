@@ -85,29 +85,59 @@ hittable_list random_scene() {
   return world;
 }
 
+hittable_list two_spheres() {
+    hittable_list objects;
+
+    auto checker = make_shared<checker_texture>(color(0.2, 0.3, 0.1), color(0.9, 0.9, 0.9));
+
+    objects.add(make_shared<sphere>(point3(0,-10, 0), 10, make_shared<lambertian>(checker)));
+    objects.add(make_shared<sphere>(point3(0, 10, 0), 10, make_shared<lambertian>(checker)));
+
+    return objects;
+}
+
 int main() {
   // Image
 
   const auto aspect_ratio = 16.0/9.0;
   const int image_width = 400;
-  const int image_height = static_cast<int>(image_width/aspect_ratio);
   const int samples_per_pixel = 50;
   const int max_depth = 50;
 
   // World
   
-  auto world = random_scene();
+hittable_list world;
 
+point3 lookfrom;
+point3 lookat;
+auto vfov = 40.0;
+auto aperture = 0.0;
 
-  //Camera
+switch (0) {
+    case 1:
+        world = random_scene();
+        lookfrom = point3(13,2,3);
+        lookat = point3(0,0,0);
+        vfov = 20.0;
+        aperture = 0.1;
+        break;
 
-  point3 lookfrom(13,2,3);
-  point3 lookat(0,0,0);
-  vec3 vup(0,1,0);
-  auto dist_to_focus = 10.0;
-  auto aperture = 0.1;
+    default:
+    case 2:
+        world = two_spheres();
+        lookfrom = point3(13,2,3);
+        lookat = point3(0,0,0);
+        vfov = 20.0;
+        break;
+}
 
-  camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
+// Camera
+
+vec3 vup(0,1,0);
+auto dist_to_focus = 10.0;
+int image_height = static_cast<int>(image_width / aspect_ratio);
+
+camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0.0, 1.0);
 
   // Render
 
