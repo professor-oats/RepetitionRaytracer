@@ -30,12 +30,6 @@ class perlin {
 	  auto v = p.y() - floor(p.y());
 	  auto w = p.z() - floor(p.z());
 
-/*
-	  u = u*u*(3-2*u);
-	  v = v*v*(3-2*v);
-	  w = w*w*(3-2*w);
-*/
-
 	  auto i = static_cast<int>(floor(p.x()));
 	  auto j = static_cast<int>(floor(p.y()));
 	  auto k = static_cast<int>(floor(p.z()));
@@ -57,6 +51,21 @@ class perlin {
 	  return perlin_interp(c, u, v, w);
 
     }
+
+    double turb(const point3& p, int depth=7) const {
+	  auto accum = 0.0;
+	  auto temp_p = p;
+	  auto weight = 1.0;
+	  
+	  for (int i = 0; i < depth; i++) {
+		accum += weight*noise(temp_p);
+	    weight *= 0.5;
+		temp_p *=2;
+	  }
+
+	  return fabs(accum);
+
+	}
 
 
   private:
