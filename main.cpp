@@ -7,6 +7,8 @@
 #include "material.h"
 #include "moving_sphere.h"
 
+#include "box.h"
+
 #include <iostream>
 
 color ray_color(const ray& r, const color& background, const hittable& world, int depth) {
@@ -117,13 +119,83 @@ hittable_list earth() {
   return hittable_list(globe);
 }
 
+hittable_list simple_light() {
+  hittable_list objects;
+
+  auto pertext = make_shared<noise_texture>(4);
+  objects.add(make_shared<sphere>(point3(0,-1000, 0), 1000, make_shared<lambertian>(pertext)));
+  objects.add(make_shared<sphere>(point3(0,2,0), 2, make_shared<lambertian>(pertext)));
+
+  auto difflight = make_shared<diffuse_light>(color(4,4,4));
+  objects.add(make_shared<xy_rect>(3, 5, 1, 3, -2, difflight));
+
+  objects.add(make_shared<sphere>(point3(-1,2,0), 2, make_shared<dielectric>(1)));
+  objects.add(make_shared<sphere>(point3(-1,4,-2), 1, make_shared<diffuse_light>(color(6,1,8))));
+
+  return objects;
+}
+
+hittable_list cornell_box() {
+  hittable_list objects;
+
+  auto red = make_shared<lambertian>(color(.65, .05, .05));
+  auto white = make_shared<lambertian>(color(.73, .73, .73));
+  auto green = make_shared<lambertian>(color(.12, .45, .15));
+  auto light = make_shared<diffuse_light>(color(15, 15, 15));
+
+  objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
+  objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
+  objects.add(make_shared<xz_rect>(213, 343, 227, 332, 554, light));
+  objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
+  objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
+  objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+
+  shared_ptr<hittable> box1 = make_shared<box>(point3(0, 0, 0), point3(165, 330, 165), white);
+  box1 = make_shared<rotate_y>(box1, 15);
+  box1 = make_shared<translate>(box1, vec3(265, 0, 295));
+  objects.add(box1);
+
+  shared_ptr<hittable> box2 = make_shared<box>(point3(0, 0, 0), point3(165, 165, 165), white);
+  box2 = make_shared<rotate_y>(box2, -18);
+  box2 = make_shared<translate>(box2, vec3(130, 0, 65));
+  objects.add(box2);
+
+
+
+  return objects;
+}
+
+hittable_list josefin_box() {
+  hittable_list objects;
+
+  auto red = make_shared<lambertian>(color(.65, .05, .05));
+  auto white = make_shared<lambertian>(color(.73, .73, .73));
+  auto green = make_shared<lambertian>(color(.12, .45, .15));
+  auto light = make_shared<diffuse_light>(color(15, 15, 15));
+
+  auto jos_texture = make_shared<image_texture>("finis.jpg");
+  auto jos_surface = make_shared<lambertian>(jos_texture);
+
+  objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
+  objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
+  objects.add(make_shared<xz_rect>(213, 343, 227, 332, 554, light));
+  objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
+  objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
+  objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+  objects.add(make_shared<xy_rect>(121.1, 433.5, 0, 555, 554, jos_surface));
+
+  objects.add(make_shared<sphere>(point3(405, 30, 350), 50, light));
+
+  return objects;
+}
+
 int main() {
   // Image
 
-  const auto aspect_ratio = 16.0/9.0;
-  const int image_width = 400;
-  const int samples_per_pixel = 50;
-  const int max_depth = 50;
+  auto aspect_ratio = 16.0/9.0;
+  int image_width = 400;
+  int samples_per_pixel = 500;
+  const int max_depth = 100;
 
   // World
   
@@ -135,7 +207,7 @@ auto vfov = 40.0;
 auto aperture = 0.0;
 color background(0, 0, 0);
 
-switch (3) {
+switch (6) {
     case 1:
         world = random_scene();
 		background = color(0.70, 0.80, 1.00);
@@ -169,11 +241,37 @@ switch (3) {
 	  vfov = 20.0;
 	  break;
 
-	default:
 	case 5:
-	  background = color(0.0, 0.0, 0.0);
+	  world = simple_light();
+      background = color(0,0,0);
+	  lookfrom = point3(26,3,6);
+	  lookat = point3(0,2,0);
+	  vfov = 20.0;
 	  break;
 
+
+	default:
+    case 6:
+	  world = cornell_box();
+	  aspect_ratio = 1.0;
+	  image_width = 600;
+	  samples_per_pixel = 100;
+	  background = color(0, 0, 0);
+	  lookfrom = point3(278, 278, -800);
+	  lookat = point3(278, 278, 0);
+	  vfov = 40.0;
+	  break;
+
+	case 7:
+	  world = josefin_box();
+	  aspect_ratio = 1.0;
+	  image_width = 600;
+	  samples_per_pixel = 200;
+	  background = color(0, 0, 0);
+	  lookfrom = point3(278, 278, -800);
+	  lookat = point3(278, 278, 0);
+	  vfov = 40.0;
+	  break;
 }
 
 // Camera
