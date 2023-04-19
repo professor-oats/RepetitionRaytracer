@@ -30,14 +30,19 @@ color ray_color(const ray& r, const color& background, const hittable& world, in
   color attenuation;
   color emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
 
-  if(!rec.mat_ptr->scatter(r, rec, attenuation, scattered)) {
-	return emitted;
+  double pdf;
+  color albedo;
+
+  if (!rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf)) {
+    return emitted;
   }
 
-  return emitted + attenuation * ray_color(scattered, background, world, depth-1);
+  return emitted
+    + albedo * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+    * ray_color(scattered, background, world, depth-1) / pdf;
 }
 
-  auto R = cos(pi/4);
+
 
 hittable_list random_scene() {
   hittable_list world;
@@ -291,9 +296,9 @@ hittable_list final_scene() {
 int main() {
   // Image
 
-  auto aspect_ratio = 16.0/9.0;
+  auto aspect_ratio = 1.0/1.0;
   int image_width = 400;
-  int samples_per_pixel = 500;
+  int samples_per_pixel = 100;
   const int max_depth = 100;
 
   // World
@@ -306,7 +311,7 @@ auto vfov = 40.0;
 auto aperture = 0.0;
 color background(0, 0, 0);
 
-switch (9) {
+switch (6) {
     case 1:
         world = random_scene();
 		background = color(0.70, 0.80, 1.00);
@@ -427,3 +432,11 @@ camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, 0
 
 }
 
+/* Extras */
+/* As long as the weights are positive and add up to one, any such mixture of PDFs is a PDF. Remember, we can use any PDF: all PDFs eventually converge to the correct answer. So, the game is to figure out how to make the PDF larger where the product s(direction)⋅color(direction)
+ is large. For diffuse surfaces, this is mainly a matter of guessing where color(direction)
+ is high.
+
+For a mirror, s()
+ is huge only near one direction, so it matters a lot more. Most renderers in fact make mirrors a special case, and just make the s/p
+ implicit — our code currently does that. */
