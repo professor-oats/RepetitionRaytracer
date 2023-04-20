@@ -8,6 +8,7 @@
 #include "moving_sphere.h"
 #include "constant_medium.h"
 #include "bvh.h"
+#include "pdf.h"
 
 #include "box.h"
 
@@ -37,7 +38,12 @@ color ray_color(const ray& r, const color& background, const hittable& world, in
     return emitted;
   }
 
-  auto on_light = point3(random_double(213,343), 554, random_double(227,332));
+  cosine_pdf p(rec.normal);
+  scattered = ray(rec.p, p.generate(), r.time());
+  pdf = p.value(scattered.direction());
+
+
+/*  auto on_light = point3(random_double(213,343), 554, random_double(227,332));
   auto to_light = on_light - rec.p;
   auto distance_squared = to_light.length_squared();
   to_light = unit_vector(to_light);
@@ -55,6 +61,8 @@ color ray_color(const ray& r, const color& background, const hittable& world, in
 
   pdf = distance_squared / (light_cosine * light_area);
   scattered = ray(rec.p, to_light, r.time());
+
+*/
 
 
   return emitted
